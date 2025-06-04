@@ -1,6 +1,7 @@
 export type PropertyType = 'HOUSE' | 'APARTMENT' | 'LAND' | 'COMMERCIAL' | 'OFFICE'
 export type PropertyStatus = 'FOR_SALE' | 'FOR_RENT' | 'SOLD' | 'RENTED'
 export type UserRole = 'ADMIN' | 'AGENT' | 'CLIENT'
+export type UserStatus = 'ACTIVE' | 'INACTIVE'
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
 export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST'
 
@@ -61,6 +62,7 @@ export interface Database {
           email: string
           full_name: string
           role: UserRole
+          status: UserStatus
           phone: string | null
           avatar_url: string | null
           created_at: string

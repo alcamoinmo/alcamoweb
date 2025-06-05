@@ -21,13 +21,14 @@ module.exports = {
             600: '#4B5563',
             700: '#374151',
             800: '#1F2937',
-            900: '#111827',
+            900: '#1a1a1a',
           },
           accent: {
             DEFAULT: '#1E3A8A', // Dark blue for accents
             light: '#2563EB',
             dark: '#1E3A8A',
           },
+          900: '#1a1a1a',
         },
       },
       fontFamily: {

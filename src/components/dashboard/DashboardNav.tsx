@@ -14,14 +14,13 @@ function classNames(...classes: string[]) {
 }
 
 export default function DashboardNav() {
-  const { user } = useAuth()
   const pathname = usePathname()
 
   const navigation = [
-    { name: 'Overview', href: '/dashboard', icon: HomeIcon },
-    { name: 'Properties', href: '/dashboard/properties', icon: BuildingOfficeIcon },
-    { name: 'Users', href: '/dashboard/users', icon: UserGroupIcon },
-    { name: 'Appointments', href: '/dashboard/appointments', icon: CalendarIcon },
+    { name: 'Resumen', href: '/dashboard', icon: HomeIcon },
+    { name: 'Propiedades', href: '/dashboard/properties', icon: BuildingOfficeIcon },
+    { name: 'Usuarios', href: '/dashboard/users', icon: UserGroupIcon },
+    { name: 'Citas', href: '/dashboard/appointments', icon: CalendarIcon },
     { name: 'Leads', href: '/dashboard/leads', icon: PhoneIcon },
   ]
 
@@ -68,7 +67,7 @@ export default function DashboardNav() {
                 href="/dashboard/settings"
                 className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-gray-700 hover:bg-gray-50 hover:text-blue-600"
               >
-                Settings
+                Configuración
               </Link>
             </li>
           </ul>

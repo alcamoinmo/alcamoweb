@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabase/client'
 import type { Database } from '../../../lib/types/supabase'
 import Link from 'next/link'
 import Image from 'next/image'
+import type { SearchFormData } from '../../../components/properties/PropertySearchForm'
 
 type Property = Database['public']['Tables']['properties']['Row']
 type PropertyWithMedia = Property & {
@@ -16,7 +17,7 @@ export default function PropertySearchPage() {
   const [properties, setProperties] = useState<PropertyWithMedia[]>([])
   const [loading, setLoading] = useState(false)
 
-  const handleSearch = async (data: any) => {
+  const handleSearch = async (data: SearchFormData) => {
     setLoading(true)
     try {
       let query = supabase
@@ -25,30 +26,30 @@ export default function PropertySearchPage() {
           *,
           property_media (*)
         `)
-        .eq('status', data.status === 'ALL' ? 'FOR_SALE' : data.status)
+        .eq('status', data['status'] === 'ALL' ? 'FOR_SALE' : data['status'])
 
-      if (data.type !== 'ALL') {
-        query = query.eq('type', data.type)
+      if (data['type'] !== 'ALL') {
+        query = query.eq('type', data['type'])
       }
 
-      if (data.minPrice) {
-        query = query.gte('price', parseFloat(data.minPrice))
+      if (data['minPrice']) {
+        query = query.gte('price', parseFloat(data['minPrice']))
       }
 
-      if (data.maxPrice) {
-        query = query.lte('price', parseFloat(data.maxPrice))
+      if (data['maxPrice']) {
+        query = query.lte('price', parseFloat(data['maxPrice']))
       }
 
-      if (data.bedrooms !== 'ANY') {
-        query = query.eq('bedrooms', data.bedrooms === '5+' ? 5 : parseInt(data.bedrooms))
+      if (data['bedrooms'] !== 'ANY') {
+        query = query.eq('bedrooms', data['bedrooms'] === '5+' ? 5 : parseInt(data['bedrooms']))
       }
 
-      if (data.bathrooms !== 'ANY') {
-        query = query.eq('bathrooms', data.bathrooms === '5+' ? 5 : parseInt(data.bathrooms))
+      if (data['bathrooms'] !== 'ANY') {
+        query = query.eq('bathrooms', data['bathrooms'] === '5+' ? 5 : parseInt(data['bathrooms']))
       }
 
-      if (data.query) {
-        query = query.or(`title.ilike.%${data.query}%,description.ilike.%${data.query}%,address.ilike.%${data.query}%`)
+      if (data['query']) {
+        query = query.or(`title.ilike.%${data['query']}%,description.ilike.%${data['query']}%,address.ilike.%${data['query']}%`)
       }
 
       const { data: results, error } = await query
@@ -110,12 +111,12 @@ export default function PropertySearchPage() {
                       </p>
                       <div className="flex items-center space-x-2 text-sm text-gray-500">
                         {property.bedrooms && (
-                          <span>{property.bedrooms} bed{property.bedrooms > 1 ? 's' : ''}</span>
+                          <span>{property.bedrooms} {property.bedrooms === 1 ? 'habitación' : 'habitaciones'}</span>
                         )}
                         {property.bathrooms && (
                           <>
                             <span>•</span>
-                            <span>{property.bathrooms} bath{property.bathrooms > 1 ? 's' : ''}</span>
+                            <span>{property.bathrooms} {property.bathrooms === 1 ? 'baño' : 'baños'}</span>
                           </>
                         )}
                       </div>
@@ -125,7 +126,7 @@ export default function PropertySearchPage() {
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500">No properties found matching your criteria.</p>
+            <p className="text-center text-gray-500">No se encontraron propiedades que coincidan con tus criterios.</p>
           )}
         </div>
       </div>

@@ -3,17 +3,16 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '../../lib/hooks/useAuth'
-import type { UserRole } from '../../lib/types/supabase'
 
 const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Dirección de correo electrónico no válida'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   confirmPassword: z.string(),
-  full_name: z.string().min(2, 'Full name is required'),
+  full_name: z.string().min(2, 'Se requiere nombre completo'),
   phone: z.string().optional(),
   role: z.enum(['CLIENT', 'AGENT'] as const),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Las contraseñas no coinciden",
   path: ["confirmPassword"],
 })
 
@@ -42,8 +41,8 @@ export default function RegisterForm() {
         avatar_url: null,
         phone: rest.phone || null,
       })
-    } catch (err) {
-      setError('An error occurred during registration')
+    } catch {
+      setError('Ocurrió un error durante el registro')
     }
   }
 
@@ -51,7 +50,7 @@ export default function RegisterForm() {
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-          Email address
+          Dirección de correo electrónico
         </label>
         <div className="mt-2">
           <input
@@ -69,7 +68,7 @@ export default function RegisterForm() {
 
       <div>
         <label htmlFor="full_name" className="block text-sm font-medium leading-6 text-gray-900">
-          Full name
+          Nombre completo
         </label>
         <div className="mt-2">
           <input
@@ -87,7 +86,7 @@ export default function RegisterForm() {
 
       <div>
         <label htmlFor="phone" className="block text-sm font-medium leading-6 text-gray-900">
-          Phone number (optional)
+          Número de teléfono (opcional)
         </label>
         <div className="mt-2">
           <input
@@ -105,7 +104,7 @@ export default function RegisterForm() {
 
       <div>
         <label htmlFor="role" className="block text-sm font-medium leading-6 text-gray-900">
-          I want to
+          Quiero
         </label>
         <div className="mt-2">
           <select
@@ -113,8 +112,8 @@ export default function RegisterForm() {
             id="role"
             className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
           >
-            <option value="CLIENT">Find a property</option>
-            <option value="AGENT">List properties as an agent</option>
+            <option value="CLIENT">Buscar una propiedad</option>
+            <option value="AGENT">Listar propiedades como agente</option>
           </select>
           {errors.role && (
             <p className="mt-2 text-sm text-red-600">{errors.role.message}</p>
@@ -124,7 +123,7 @@ export default function RegisterForm() {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-          Password
+          Contraseña
         </label>
         <div className="mt-2">
           <input
@@ -142,7 +141,7 @@ export default function RegisterForm() {
 
       <div>
         <label htmlFor="confirmPassword" className="block text-sm font-medium leading-6 text-gray-900">
-          Confirm password
+          Confirmar contraseña
         </label>
         <div className="mt-2">
           <input
@@ -174,7 +173,7 @@ export default function RegisterForm() {
           disabled={isSubmitting}
           className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Creating account...' : 'Create account'}
+          {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
       </div>
     </form>

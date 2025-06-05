@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { PropertyType, PropertyStatus } from '../../lib/types/supabase'
 
 const searchSchema = z.object({
   query: z.string().optional(),
@@ -20,6 +19,7 @@ interface PropertySearchFormProps {
   initialValues?: Partial<SearchFormData>
 }
 
+export type { SearchFormData }
 export default function PropertySearchForm({ onSearch, initialValues }: PropertySearchFormProps) {
   const {
     register,

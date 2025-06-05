@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../lib/hooks/useAuth'
 import { supabase } from '../../lib/supabase/config'
-import type { Database } from '../../lib/types/supabase'
 
 type DashboardStats = {
   totalProperties: number
@@ -81,7 +80,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <p className="ml-16 truncate text-sm font-medium text-gray-500">
-              Total Properties
+              Total Propiedades
             </p>
           </dt>
           <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
@@ -109,7 +108,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <p className="ml-16 truncate text-sm font-medium text-gray-500">
-              Active Listings
+              Listados Activos
             </p>
           </dt>
           <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
@@ -165,7 +164,7 @@ export default function DashboardPage() {
               </svg>
             </div>
             <p className="ml-16 truncate text-sm font-medium text-gray-500">
-              Pending Appointments
+              Citas Pendientes
             </p>
           </dt>
           <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">

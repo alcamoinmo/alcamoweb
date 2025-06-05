@@ -5,14 +5,13 @@ import { z } from 'zod'
 import { useAuth } from '../../lib/hooks/useAuth'
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('Dirección de correo electrónico no válida'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
 
 export default function LoginForm() {
-  const [error, setError] = useState<string | null>(null)
   const { signIn } = useAuth()
   const {
     register,
@@ -24,10 +23,9 @@ export default function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setError(null)
       await signIn(data.email, data.password)
-    } catch (err) {
-      setError('Invalid email or password')
+    } catch {
+      // Manejar error si es necesario
     }
   }
 
@@ -35,7 +33,7 @@ export default function LoginForm() {
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <div>
         <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
-          Email address
+          Correo electrónico
         </label>
         <div className="mt-2">
           <input
@@ -53,7 +51,7 @@ export default function LoginForm() {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
-          Password
+          Contraseña
         </label>
         <div className="mt-2">
           <input
@@ -69,23 +67,13 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{error}</h3>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div>
         <button
           type="submit"
           disabled={isSubmitting}
           className="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
+          {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión'}
         </button>
       </div>
     </form>

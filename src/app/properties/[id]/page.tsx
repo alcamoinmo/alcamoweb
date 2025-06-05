@@ -1,30 +1,36 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { supabase } from '../../../lib/supabase/client'
+import { supabase } from '../../../lib/supabase/config'
 import type { Database } from '../../../lib/types/supabase'
 import { useAuth } from '../../../lib/hooks/useAuth'
 
-type Property = Database['public']['Tables']['properties']['Row']
-type PropertyWithDetails = Property & {
+type Property = Database['public']['Tables']['properties']['Row'] & {
   property_media: Database['public']['Tables']['property_media']['Row'][]
   agent: Database['public']['Tables']['users']['Row']
 }
 
-export default function PropertyPage() {
-  const { id } = useParams()
-  const { user } = useAuth()
-  const [property, setProperty] = useState<PropertyWithDetails | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [showContactForm, setShowContactForm] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+interface PropertyPageProps {
+  params: {
+    id: string
+  }
+}
 
-  useEffect(() => {
-    fetchProperty()
-  }, [id])
+export default function PropertyPage({ params }: PropertyPageProps) {
+  const { user } = useAuth()
+  const [property, setProperty] = useState<Property | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showContactForm, setShowContactForm] = useState(false)
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    message: '',
+  })
+  const [formLoading, setFormLoading] = useState(false)
+  const [formSuccess, setFormSuccess] = useState(false)
 
   const fetchProperty = async () => {
     try {
@@ -35,215 +41,200 @@ export default function PropertyPage() {
           property_media (*),
           agent:users!properties_agent_id_fkey (*)
         `)
-        .eq('id', id)
+        .eq('id', params.id)
         .single()
 
       if (error) throw error
       setProperty(data)
-      if (data?.property_media?.[0]) {
-        setSelectedImage(data.property_media[0].url)
-      }
-    } catch (error) {
-      console.error('Error fetching property:', error)
+    } catch (err) {
+      console.error('Error fetching property:', err)
+      setError('No se pudo cargar la propiedad')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleContact = async (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    fetchProperty()
+  }, [params.id, fetchProperty])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!property) return
+    setFormLoading(true)
 
-    const form = e.currentTarget
-    const formData = new FormData(form)
-
-    setSubmitting(true)
     try {
       const { error } = await supabase.from('leads').insert([
         {
-          full_name: formData.get('name') as string,
-          email: formData.get('email') as string,
-          phone: formData.get('phone') as string,
-          message: formData.get('message') as string,
-          property_id: property.id,
-          assigned_agent_id: property.agent_id,
+          ...formData,
+          property_id: params.id,
           status: 'NEW',
+          assigned_agent_id: property?.agent_id,
         },
       ])
 
       if (error) throw error
-      setShowContactForm(false)
-      alert('Thank you! The agent will contact you soon.')
-      form.reset()
-    } catch (error) {
-      console.error('Error submitting lead:', error)
-      alert('An error occurred. Please try again.')
+      setFormSuccess(true)
+      setFormData({ full_name: '', email: '', phone: '', message: '' })
+    } catch (err) {
+      console.error('Error submitting lead:', err)
+      setError('Failed to submit your request')
     } finally {
-      setSubmitting(false)
+      setFormLoading(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-r-transparent" />
       </div>
     )
   }
 
-  if (!property) {
+  if (error || !property) {
     return (
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="py-16 text-center">
-          <h2 className="text-2xl font-bold">Property not found</h2>
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <h2 className="text-lg font-medium text-gray-900">Error</h2>
+          <p className="mt-2 text-sm text-gray-500">{error || 'Property not found'}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="lg:grid lg:grid-cols-2 lg:gap-x-8">
-          {/* Images */}
-          <div className="lg:max-w-lg">
-            <div className="aspect-w-16 aspect-h-9 overflow-hidden rounded-lg">
-              {selectedImage && (
-                <Image
-                  src={selectedImage}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                />
-              )}
-            </div>
-            {property.property_media.length > 1 && (
-              <div className="mt-4 grid grid-cols-4 gap-4">
-                {property.property_media.map((media) => (
-                  <button
-                    key={media.id}
-                    onClick={() => setSelectedImage(media.url)}
-                    className={`aspect-w-1 aspect-h-1 relative overflow-hidden rounded-lg ${
-                      selectedImage === media.url ? 'ring-2 ring-blue-500' : ''
-                    }`}
-                  >
-                    <Image
-                      src={media.url}
-                      alt=""
-                      fill
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+    <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-x-8">
+        {/* Image Gallery */}
+        <div className="relative">
+          <div className="aspect-w-16 aspect-h-9 relative rounded-lg overflow-hidden">
+            {property.property_media?.[0] && (
+              <Image
+                src={property.property_media[0].url}
+                alt={property.title}
+                fill
+                className="object-cover"
+                priority
+              />
             )}
           </div>
-
-          {/* Property details */}
-          <div className="mt-10 lg:mt-0">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">{property.title}</h1>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-blue-600">
-                {new Intl.NumberFormat('es-MX', {
-                  style: 'currency',
-                  currency: property.currency,
-                  maximumFractionDigits: 0,
-                }).format(property.price)}
-              </p>
+          {property.property_media && property.property_media.length > 1 && (
+            <div className="mt-4 grid grid-cols-4 gap-4">
+              {property.property_media.slice(1).map((media) => (
+                <div key={media.id} className="aspect-w-1 aspect-h-1 relative rounded-lg overflow-hidden">
+                  <Image
+                    src={media.url}
+                    alt={property.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ))}
             </div>
+          )}
+        </div>
 
-            <div className="mt-6">
-              <h2 className="text-lg font-medium text-gray-900">Details</h2>
-              <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+        {/* Property Details */}
+        <div className="mt-10 lg:mt-0">
+          <h1 className="text-3xl font-bold text-gray-900">{property.title}</h1>
+          <div className="mt-4">
+            <span className="text-3xl font-bold text-gray-900">
+              {new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: property.currency,
+                maximumFractionDigits: 0,
+              }).format(property.price)}
+            </span>
+            <span className="ml-4 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+              {property.status === 'FOR_SALE' ? 'En venta' : 'En renta'}
+            </span>
+          </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Tipo</dt>
+                <dd className="mt-1 text-sm text-gray-900">{property.type}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Ubicación</dt>
+                <dd className="mt-1 text-sm text-gray-900">{property.address}</dd>
+              </div>
+              {property.bedrooms && (
                 <div>
-                  <p className="font-medium text-gray-500">Type</p>
-                  <p className="mt-1">{property.type}</p>
+                  <dt className="text-sm font-medium text-gray-500">Habitaciones</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{property.bedrooms}</dd>
                 </div>
+              )}
+              {property.bathrooms && (
                 <div>
-                  <p className="font-medium text-gray-500">Status</p>
-                  <p className="mt-1">{property.status}</p>
+                  <dt className="text-sm font-medium text-gray-500">Baños</dt>
+                  <dd className="mt-1 text-sm text-gray-900">{property.bathrooms}</dd>
                 </div>
-                {property.bedrooms && (
-                  <div>
-                    <p className="font-medium text-gray-500">Bedrooms</p>
-                    <p className="mt-1">{property.bedrooms}</p>
-                  </div>
-                )}
-                {property.bathrooms && (
-                  <div>
-                    <p className="font-medium text-gray-500">Bathrooms</p>
-                    <p className="mt-1">{property.bathrooms}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="font-medium text-gray-500">Area</p>
-                  <p className="mt-1">
-                    {property.area_size} {property.area_unit}
-                  </p>
+              )}
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Área</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {property.area_size} {property.area_unit}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <h3 className="text-sm font-medium text-gray-900">Descripción</h3>
+            <div className="mt-2 text-sm text-gray-500 space-y-4">
+              <p>{property.description}</p>
+            </div>
+          </div>
+
+          <div className="mt-6 border-t border-gray-200 pt-6">
+            <h3 className="text-sm font-medium text-gray-900">Listado por</h3>
+            <div className="mt-3 flex items-center">
+              {property.agent.avatar_url ? (
+                <Image
+                  src={property.agent.avatar_url}
+                  alt={property.agent.full_name}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-sm font-medium text-gray-500">
+                    {property.agent.full_name[0]}
+                  </span>
                 </div>
+              )}
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">{property.agent.full_name}</p>
+                <p className="text-sm text-gray-500">{property.agent.email}</p>
               </div>
             </div>
+          </div>
 
-            <div className="mt-6">
-              <h2 className="text-lg font-medium text-gray-900">Description</h2>
-              <p className="mt-4 whitespace-pre-wrap text-gray-700">{property.description}</p>
-            </div>
-
-            <div className="mt-6">
-              <h2 className="text-lg font-medium text-gray-900">Location</h2>
-              <p className="mt-4 text-gray-700">
-                {property.address}
-                <br />
-                {property.city}, {property.state} {property.postal_code}
-              </p>
-            </div>
-
-            {property.features?.length > 0 && (
-              <div className="mt-6">
-                <h2 className="text-lg font-medium text-gray-900">Features</h2>
-                <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
-                  {property.features.map((feature) => (
-                    <li key={feature} className="flex items-center">
-                      <svg
-                        className="mr-2 h-5 w-5 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="mt-8">
+          {/* Contact Form */}
+          {!user && (
+            <div className="mt-6 border-t border-gray-200 pt-6">
               {!showContactForm ? (
                 <button
                   onClick={() => setShowContactForm(true)}
-                  className="w-full rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10"
                 >
                   Contact Agent
                 </button>
               ) : (
-                <form onSubmit={handleContact} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                      Name
+                    <label htmlFor="full_name" className="block text-sm font-medium text-gray-700">
+                      Full Name
                     </label>
                     <input
                       type="text"
-                      name="name"
-                      id="name"
+                      id="full_name"
                       required
-                      defaultValue={user?.full_name || ''}
+                      value={formData.full_name}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
@@ -253,10 +244,10 @@ export default function PropertyPage() {
                     </label>
                     <input
                       type="email"
-                      name="email"
                       id="email"
                       required
-                      defaultValue={user?.email || ''}
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
@@ -266,10 +257,10 @@ export default function PropertyPage() {
                     </label>
                     <input
                       type="tel"
-                      name="phone"
                       id="phone"
                       required
-                      defaultValue={user?.phone || ''}
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
@@ -278,34 +269,30 @@ export default function PropertyPage() {
                       Message
                     </label>
                     <textarea
-                      name="message"
                       id="message"
-                      rows={4}
                       required
-                      defaultValue={`I'm interested in this ${property.type.toLowerCase()} at ${property.address}`}
+                      rows={4}
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
-                  <div className="flex space-x-4">
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="flex-1 rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
-                    >
-                      {submitting ? 'Sending...' : 'Send Message'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowContactForm(false)}
-                      className="flex-1 rounded-md bg-gray-100 px-3.5 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    disabled={formLoading}
+                    className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    {formLoading ? 'Sending...' : 'Send Message'}
+                  </button>
+                  {formSuccess && (
+                    <p className="mt-2 text-sm text-green-600">
+                      Your message has been sent! The agent will contact you soon.
+                    </p>
+                  )}
                 </form>
               )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,16 +1,5 @@
-import { Fragment } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../../lib/hooks/useAuth'
 import Link from 'next/link'
-import Image from 'next/image'
-
-const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Properties', href: '/properties/search' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
-]
 
 export default function MainLayout({
   children,
@@ -33,13 +22,13 @@ export default function MainLayout({
                   href="/properties/search"
                   className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 >
-                  Properties
+                  Propiedades
                 </Link>
                 <Link
                   href="/contact"
                   className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 >
-                  Contact
+                  Contacto
                 </Link>
               </div>
             </div>
@@ -50,13 +39,13 @@ export default function MainLayout({
                     href="/dashboard"
                     className="text-sm font-medium text-gray-500 hover:text-gray-700"
                   >
-                    Dashboard
+                    Panel
                   </Link>
                   <button
                     onClick={() => signOut()}
                     className="text-sm font-medium text-gray-500 hover:text-gray-700"
                   >
-                    Sign Out
+                    Cerrar sesión
                   </button>
                 </div>
               ) : (
@@ -65,13 +54,13 @@ export default function MainLayout({
                     href="/auth/login"
                     className="text-sm font-medium text-gray-500 hover:text-gray-700"
                   >
-                    Sign In
+                    Iniciar sesión
                   </Link>
                   <Link
                     href="/auth/register"
                     className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                   >
-                    Sign Up
+                    Crear cuenta
                   </Link>
                 </div>
               )}
@@ -86,7 +75,7 @@ export default function MainLayout({
         <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
           <div className="mt-8 md:order-1 md:mt-0">
             <p className="text-center text-xs leading-5 text-gray-500">
-              &copy; {new Date().getFullYear()} Alcamo Real Estate. All rights reserved.
+              &copy; {new Date().getFullYear()} Alcamo Real Estate. Todos los derechos reservados.
             </p>
           </div>
         </div>

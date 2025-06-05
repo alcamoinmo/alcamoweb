@@ -52,60 +52,6 @@ interface Visit {
   status: string;
 }
 
-const propertyImages = [
-  '/images/properties/property-1.jpg',
-  '/images/properties/property-2.jpg',
-  '/images/properties/property-3.jpg',
-]
-
-const propertyDetails = {
-  id: 1,
-  title: 'Casa en Residencial Campestre',
-  description:
-    'Hermosa casa en venta en Residencial Campestre. Amplia, moderna y con excelente ubicación. Cuenta con 4 habitaciones, 3 baños, cocina integral, sala de estar, comedor, jardín y cochera para 2 autos.',
-  type: 'Casa',
-  status: 'En Venta',
-  price: '$2,500,000',
-  address: 'Av. Principal #123',
-  city: 'Aguascalientes',
-  state: 'Aguascalientes',
-  zipCode: '20100',
-  bedrooms: 4,
-  bathrooms: 3,
-  area: 250,
-  features: [
-    'Cocina Integral',
-    'Jardín',
-    'Cochera',
-    'Seguridad 24/7',
-    'Área de Juegos',
-    'Alberca',
-  ],
-  createdAt: '2024-03-15',
-  updatedAt: '2024-03-15',
-  agent: {
-    name: 'Juan Pérez',
-    email: 'juan@alcamo.com',
-    phone: '(449) 123-4567',
-  },
-  visits: [
-    {
-      id: 1,
-      client: 'María González',
-      date: '2024-03-20',
-      time: '15:00',
-      status: 'Programada',
-    },
-    {
-      id: 2,
-      client: 'Carlos Rodríguez',
-      date: '2024-03-21',
-      time: '11:00',
-      status: 'Programada',
-    },
-  ],
-}
-
 export default function PropertyDetailPage({
   params,
 }: {
@@ -340,8 +286,6 @@ export default function PropertyDetailPage({
                   <PropertyMap
                     latitude={property.latitude}
                     longitude={property.longitude}
-                    title={property.title}
-                    address={property.address}
                     height="300px"
                   />
                 </div>

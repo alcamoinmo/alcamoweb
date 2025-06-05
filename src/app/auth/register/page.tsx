@@ -2,7 +2,6 @@
 
 import React from "react";
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 
@@ -13,7 +12,6 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const router = useRouter();
   const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {

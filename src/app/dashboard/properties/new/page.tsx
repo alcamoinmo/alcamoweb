@@ -3,7 +3,6 @@
 import React from "react"
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/components/auth/AuthProvider'
 
 const propertyTypes = [
   { id: 'house', name: 'Casa' },
@@ -21,7 +20,6 @@ const propertyStatus = [
 
 export default function NewPropertyPage() {
   const router = useRouter()
-  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

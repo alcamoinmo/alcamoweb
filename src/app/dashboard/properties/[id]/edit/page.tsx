@@ -1,28 +1,33 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/components/auth/AuthProvider'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 const propertyTypes = [
   { id: 'house', name: 'Casa' },
   { id: 'apartment', name: 'Departamento' },
   { id: 'land', name: 'Terreno' },
   { id: 'commercial', name: 'Local Comercial' },
-]
+];
 
 const propertyStatus = [
   { id: 'for_sale', name: 'En Venta' },
   { id: 'for_rent', name: 'En Renta' },
   { id: 'sold', name: 'Vendida' },
   { id: 'rented', name: 'Rentada' },
-]
+];
 
-export default function NewPropertyPage() {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export default function EditPropertyPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -39,65 +44,126 @@ export default function NewPropertyPage() {
     area: '',
     features: [] as string[],
     images: [] as File[],
-  })
+  });
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        // TODO: Implement property fetching with Supabase
+        // const { data, error } = await supabase
+        //   .from('properties')
+        //   .select('*')
+        //   .eq('id', params.id)
+        //   .single();
+
+        // if (error) throw error;
+
+        // if (data) {
+        //   setFormData({
+        //     ...data,
+        //     bedrooms: data.bedrooms.toString(),
+        //     bathrooms: data.bathrooms.toString(),
+        //     area: data.area.toString(),
+        //   });
+        // }
+
+        // Simulación de datos para desarrollo
+        setFormData({
+          title: 'Casa en Residencial Campestre',
+          description: 'Hermosa casa en venta en Residencial Campestre',
+          type: 'house',
+          status: 'for_sale',
+          price: '$2,500,000',
+          address: 'Av. Principal #123',
+          city: 'Aguascalientes',
+          state: 'Aguascalientes',
+          zipCode: '20100',
+          bedrooms: '4',
+          bathrooms: '3',
+          area: '250',
+          features: [],
+          images: [],
+        });
+      } catch (err) {
+        setError('Error al cargar la propiedad. Por favor intenta de nuevo.');
+        console.error('Error fetching property:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchProperty();
+    }
+  }, [params.id, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
 
     try {
-      // TODO: Implement property creation with Supabase
+      // TODO: Implement property update with Supabase
       // const { data, error } = await supabase
       //   .from('properties')
-      //   .insert([
-      //     {
-      //       ...formData,
-      //       user_id: user?.id,
-      //       created_at: new Date().toISOString(),
-      //     },
-      //   ])
+      //   .update({
+      //     ...formData,
+      //     updated_at: new Date().toISOString(),
+      //   })
+      //   .eq('id', params.id);
 
-      // if (error) throw error
+      // if (error) throw error;
 
-      router.push('/dashboard/properties')
+      router.push('/dashboard/properties');
     } catch (err) {
-      setError('Error al crear la propiedad. Por favor intenta de nuevo.')
-      console.error('Error creating property:', err)
+      setError('Error al actualizar la propiedad. Por favor intenta de nuevo.');
+      console.error('Error updating property:', err);
     } finally {
-      setLoading(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFormData((prev) => ({
         ...prev,
         images: [...prev.images, ...Array.from(e.target.files || [])],
-      }))
+      }));
     }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <h2 className="text-lg font-medium text-brand-gray-900">
+            Cargando propiedad...
+          </h2>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-brand-gray-900">
-          Nueva Propiedad
+          Editar Propiedad
         </h1>
         <p className="mt-1 text-sm text-brand-gray-500">
-          Completa el formulario para agregar una nueva propiedad al sistema.
+          Actualiza la información de la propiedad.
         </p>
       </div>
 
@@ -416,13 +482,13 @@ export default function NewPropertyPage() {
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={saving}
             className="rounded-md bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-white shadow-sm hover:bg-brand-accent-dark focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Guardando...' : 'Guardar Propiedad'}
+            {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </form>
     </div>
-  )
+  );
 } 

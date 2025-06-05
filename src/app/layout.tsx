@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import MainLayout from '../components/layout/MainLayout'
+import { AuthProvider } from '@/components/auth/AuthProvider'
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Alcamo Real Estate',
-  description: 'Find your dream property in Aguascalientes, Mexico',
+  description: 'Tu socio confiable en bienes raíces',
 }
 
 export default function RootLayout({
@@ -16,9 +18,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full bg-gray-100">
+    <html lang="es" className="h-full bg-gray-100">
+      <head>
+        <GoogleAnalytics />
+      </head>
       <body className={`${inter.className} h-full`}>
-        <MainLayout>{children}</MainLayout>
+        <AuthProvider>
+          <MainLayout>{children}</MainLayout>
+        </AuthProvider>
       </body>
     </html>
   )

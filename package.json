@@ -6,31 +6,40 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "seed:properties": "ts-node scripts/seed-properties.ts"
   },
   "dependencies": {
-    "@headlessui/react": "^1.7.18",
-    "@heroicons/react": "^2.1.1",
+    "@headlessui/react": "^1.7.19",
+    "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.3.4",
     "@supabase/auth-helpers-nextjs": "^0.9.0",
-    "@supabase/supabase-js": "^2.39.7",
-    "next": "14.1.0",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@types/leaflet": "^1.9.18",
+    "@types/mapbox-gl": "^3.4.1",
+    "leaflet": "^1.9.4",
+    "mapbox-gl": "^3.12.0",
+    "next": "^15.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.1",
+    "react-leaflet": "^4.2.1",
     "tailwindcss": "^3.4.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.49.10",
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^20.11.19",
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.17",
+    "dotenv": "^16.5.0",
     "eslint": "^8.56.0",
     "eslint-config-next": "14.1.0",
     "postcss": "^8.4.35",
-    "typescript": "^5.3.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }

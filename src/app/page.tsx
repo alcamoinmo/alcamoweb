@@ -4,281 +4,348 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { supabase } from '../lib/supabase/config'
-import type { Database } from '../lib/types/supabase'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { MagnifyingGlassIcon, HomeIcon, BuildingOfficeIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
 
-type Property = Database['public']['Tables']['properties']['Row'] & {
-  property_media: Database['public']['Tables']['property_media']['Row'][]
+interface Property {
+  id: number
+  title: string
+  type: string
+  status: string
+  price: number
+  bedrooms: number
+  bathrooms: number
+  area: number
+  images: string[]
+  city: string
+  state: string
 }
+
+const features = [
+  {
+    title: 'Propiedades Premium',
+    description: 'Selección cuidadosa de las mejores propiedades en Aguascalientes',
+    icon: HomeIcon,
+  },
+  {
+    title: 'Asesoría Personalizada',
+    description: 'Agentes expertos que te guiarán en todo el proceso',
+    icon: HomeIcon,
+  },
+  {
+    title: 'Ubicaciones Estratégicas',
+    description: 'Propiedades en las mejores zonas de la ciudad',
+    icon: HomeIcon,
+  },
+  {
+    title: 'Inversión Segura',
+    description: 'Garantizamos la seguridad y legalidad de cada transacción',
+    icon: HomeIcon,
+  },
+]
 
 export default function HomePage() {
   const router = useRouter()
-  const [searchParams, setSearchParams] = useState({
+  const supabase = createClientComponentClient()
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState({
+    location: '',
     type: '',
     status: '',
     minPrice: '',
     maxPrice: '',
-    location: '',
   })
-  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchFeaturedProperties()
-  }, [])
+    const fetchFeaturedProperties = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('featured', true)
+          .limit(6)
 
-  const fetchFeaturedProperties = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          property_media (*)
-        `)
-        .in('status', ['FOR_SALE', 'FOR_RENT'])
-        .order('created_at', { ascending: false })
-        .limit(6)
-
-      if (error) throw error
-      setFeaturedProperties(data || [])
-    } catch (error) {
-      console.error('Error fetching featured properties:', error)
-    } finally {
-      setLoading(false)
+        if (error) throw error
+        setFeaturedProperties(data || [])
+      } catch (err) {
+        console.error('Error fetching featured properties:', err)
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+
+    fetchFeaturedProperties()
+  }, [supabase])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    const params = new URLSearchParams()
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (value) params.append(key, value)
-    })
-    router.push(`/properties?${params.toString()}`)
+    const queryParams = new URLSearchParams()
+    
+    if (searchQuery.location) queryParams.set('location', searchQuery.location)
+    if (searchQuery.type) queryParams.set('type', searchQuery.type)
+    if (searchQuery.status) queryParams.set('status', searchQuery.status)
+    if (searchQuery.minPrice) queryParams.set('minPrice', searchQuery.minPrice)
+    if (searchQuery.maxPrice) queryParams.set('maxPrice', searchQuery.maxPrice)
+
+    router.push(`/propiedades?${queryParams.toString()}`)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setSearchQuery(prev => ({ ...prev, [name]: value }))
   }
 
   return (
-    <div>
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="relative bg-gray-900 h-[600px]">
+      <div className="relative bg-brand-gray-900">
         <div className="absolute inset-0">
           <Image
-            src="/hero-image.jpg"
-            alt="Casa de lujo en Aguascalientes"
+            src="/images/hero-bg.jpg"
+            alt="Alcamo Real Estate"
             fill
-            className="object-cover"
+            className="object-cover opacity-50"
             priority
           />
-          <div className="absolute inset-0 bg-gray-900/70" />
         </div>
-
-        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Encuentra tu casa so&ntilde;ada en Aguascalientes
-          </h1>
-          <p className="mt-6 text-xl text-gray-300 max-w-3xl">
-            Descubre la propiedad perfecta con Alcamo Real Estate. Ofrecemos una amplia selecci&oacute;n de casas,
-            apartamentos y propiedades comerciales en toda Aguascalientes.
-          </p>
+        <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold tracking-tight text-brand-white sm:text-5xl md:text-6xl">
+              Encuentra tu hogar ideal
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-brand-gray-300">
+              Descubre propiedades exclusivas en las mejores ubicaciones de México
+            </p>
+          </div>
 
           {/* Search Form */}
-          <form onSubmit={handleSearch} className="mt-8 sm:flex gap-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:grid-cols-5 w-full">
-              <select
-                value={searchParams.type}
-                onChange={(e) => setSearchParams({ ...searchParams, type: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Tipo de propiedad</option>
-                <option value="HOUSE">Casa</option>
-                <option value="APARTMENT">Apartamento</option>
-                <option value="LAND">Terreno</option>
-                <option value="COMMERCIAL">Comercial</option>
-                <option value="OFFICE">Oficina</option>
-              </select>
-
-              <select
-                value={searchParams.status}
-                onChange={(e) => setSearchParams({ ...searchParams, status: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                <option value="">Estado</option>
-                <option value="FOR_SALE">En venta</option>
-                <option value="FOR_RENT">En renta</option>
-              </select>
-
-              <input
-                type="number"
-                placeholder="Precio mínimo"
-                value={searchParams.minPrice}
-                onChange={(e) => setSearchParams({ ...searchParams, minPrice: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-
-              <input
-                type="number"
-                placeholder="Precio máximo"
-                value={searchParams.maxPrice}
-                onChange={(e) => setSearchParams({ ...searchParams, maxPrice: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-
-              <input
-                type="text"
-                placeholder="Ubicación"
-                value={searchParams.location}
-                onChange={(e) => setSearchParams({ ...searchParams, location: e.target.value })}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="mt-4 sm:mt-0 w-full sm:w-auto flex-shrink-0 px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Buscar
-            </button>
-          </form>
+          <div className="mx-auto mt-12 max-w-3xl">
+            <form onSubmit={handleSearch} className="bg-brand-white rounded-lg shadow-xl p-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-brand-gray-700">
+                    Ubicación
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    id="location"
+                    value={searchQuery.location}
+                    onChange={handleInputChange}
+                    placeholder="Ciudad, colonia o código postal"
+                    className="mt-1 block w-full rounded-md border-brand-gray-300 shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="type" className="block text-sm font-medium text-brand-gray-700">
+                    Tipo
+                  </label>
+                  <select
+                    name="type"
+                    id="type"
+                    value={searchQuery.type}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-brand-gray-300 shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:text-sm"
+                  >
+                    <option value="">Todos</option>
+                    <option value="casa">Casa</option>
+                    <option value="departamento">Departamento</option>
+                    <option value="terreno">Terreno</option>
+                    <option value="local">Local Comercial</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="status" className="block text-sm font-medium text-brand-gray-700">
+                    Operación
+                  </label>
+                  <select
+                    name="status"
+                    id="status"
+                    value={searchQuery.status}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full rounded-md border-brand-gray-300 shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:text-sm"
+                  >
+                    <option value="">Todas</option>
+                    <option value="venta">Venta</option>
+                    <option value="renta">Renta</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="minPrice" className="block text-sm font-medium text-brand-gray-700">
+                    Precio Mínimo
+                  </label>
+                  <input
+                    type="number"
+                    name="minPrice"
+                    id="minPrice"
+                    value={searchQuery.minPrice}
+                    onChange={handleInputChange}
+                    placeholder="Mínimo"
+                    className="mt-1 block w-full rounded-md border-brand-gray-300 shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:text-sm"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="maxPrice" className="block text-sm font-medium text-brand-gray-700">
+                    Precio Máximo
+                  </label>
+                  <input
+                    type="number"
+                    name="maxPrice"
+                    id="maxPrice"
+                    value={searchQuery.maxPrice}
+                    onChange={handleInputChange}
+                    placeholder="Máximo"
+                    className="mt-1 block w-full rounded-md border-brand-gray-300 shadow-sm focus:border-brand-accent focus:ring-brand-accent sm:text-sm"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    className="w-full rounded-md bg-brand-accent px-4 py-2 text-sm font-semibold text-brand-white shadow-sm hover:bg-brand-accent-dark focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2"
+                  >
+                    <MagnifyingGlassIcon className="h-5 w-5 inline-block mr-2" />
+                    Buscar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
       {/* Featured Properties */}
-      <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Propiedades Destacadas</h2>
-          <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-            Descubre nuestra selección elegida de propiedades premium en Aguascalientes
+          <h2 className="text-3xl font-bold tracking-tight text-brand-gray-900">
+            Propiedades Destacadas
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-brand-gray-500">
+            Descubre nuestras propiedades más exclusivas
           </p>
         </div>
 
-        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {featuredProperties.map((property) => (
-            <Link
-              key={property.id}
-              href={`/properties/${property.id}`}
-              className="group relative bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="aspect-w-16 aspect-h-9 relative">
-                {property.property_media?.[0] && (
+        {loading ? (
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-[4/3] rounded-lg bg-brand-gray-200" />
+                <div className="mt-4 space-y-3">
+                  <div className="h-4 w-3/4 rounded bg-brand-gray-200" />
+                  <div className="h-4 w-1/2 rounded bg-brand-gray-200" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProperties.map((property) => (
+              <Link
+                key={property.id}
+                href={`/propiedades/${property.id}`}
+                className="group relative overflow-hidden rounded-lg bg-brand-white shadow transition hover:shadow-lg"
+              >
+                <div className="aspect-[4/3] overflow-hidden">
                   <Image
-                    src={property.property_media[0].url}
+                    src={property.images[0] || '/images/placeholder.jpg'}
                     alt={property.title}
                     fill
-                    className="object-cover"
+                    className="object-cover transition group-hover:scale-105"
                   />
-                )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-gray-900/60 to-transparent" />
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <p className="text-sm font-medium text-brand-white">
+                      {property.city}, {property.state}
+                    </p>
+                    <h3 className="mt-1 text-lg font-semibold text-brand-white">
+                      {property.title}
+                    </h3>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-lg font-semibold text-brand-gray-900">
+                      ${property.price.toLocaleString()}
+                    </p>
+                    <span className="inline-flex items-center rounded-full bg-brand-green-50 px-2.5 py-0.5 text-xs font-medium text-brand-green-700">
+                      {property.status}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between text-sm text-brand-gray-500">
+                    <div className="flex items-center">
+                      <HomeIcon className="h-5 w-5 text-brand-gray-400" />
+                      <span className="ml-1">{property.type}</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span>{property.bedrooms} rec</span>
+                      <span>{property.bathrooms} baños</span>
+                      <span>{property.area}m²</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Quick Links */}
+        <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <Link
+            href="/propiedades?status=venta"
+            className="group relative overflow-hidden rounded-lg bg-brand-white p-6 shadow transition hover:shadow-lg"
+          >
+            <div className="flex items-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-accent/10">
+                <HomeIcon className="h-6 w-6 text-brand-accent" />
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600">
-                  {property.title}
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-brand-gray-900">
+                  Comprar
                 </h3>
-                <p className="mt-2 text-sm text-gray-500">{property.address}</p>
-                <div className="mt-4 flex justify-between items-center">
-                  <span className="text-2xl font-bold text-gray-900">
-                    {new Intl.NumberFormat('es-MX', {
-                      style: 'currency',
-                      currency: property.currency,
-                      maximumFractionDigits: 0,
-                    }).format(property.price)}
-                  </span>
-                  <span className="text-sm font-medium text-blue-600">
-                    {property.status === 'FOR_SALE' ? 'En venta' : 'En renta'}
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center text-sm text-gray-500 space-x-4">
-                  {property.bedrooms && (
-                    <span>{property.bedrooms} {property.bedrooms === 1 ? 'Habitación' : 'Habitaciones'}</span>
-                  )}
-                  {property.bathrooms && (
-                    <span>{property.bathrooms} {property.bathrooms === 1 ? 'Baño' : 'Baños'}</span>
-                  )}
-                  <span>{property.area_size} {property.area_unit}</span>
-                </div>
+                <p className="mt-1 text-sm text-brand-gray-500">
+                  Encuentra tu hogar ideal
+                </p>
               </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Why Choose Us */}
-      <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Por Qué Elegirnos
-            </h2>
-            <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
-              Tu socio de confianza en el mercado inmobiliario de Aguascalientes
-            </p>
-          </div>
-
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white mx-auto">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                  />
-                </svg>
-              </div>
-              <h3 className="mt-6 text-lg font-medium text-gray-900">Experiencia Local</h3>
-              <p className="mt-2 text-base text-gray-500">
-                Profundo conocimiento de las tendencias y oportunidades del mercado inmobiliario de Aguascalientes
-              </p>
             </div>
+          </Link>
 
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white mx-auto">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
+          <Link
+            href="/propiedades?status=renta"
+            className="group relative overflow-hidden rounded-lg bg-brand-white p-6 shadow transition hover:shadow-lg"
+          >
+            <div className="flex items-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-accent/10">
+                <BuildingOfficeIcon className="h-6 w-6 text-brand-accent" />
               </div>
-              <h3 className="mt-6 text-lg font-medium text-gray-900">Agentes Profesionales</h3>
-              <p className="mt-2 text-base text-gray-500">
-                Equipo dedicado a encontrar la propiedad perfecta para ti
-              </p>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-brand-gray-900">
+                  Rentar
+                </h3>
+                <p className="mt-1 text-sm text-brand-gray-500">
+                  Propiedades en renta
+                </p>
+              </div>
             </div>
+          </Link>
 
-            <div className="text-center">
-              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-600 text-white mx-auto">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
+          <Link
+            href="/propiedades?type=local"
+            className="group relative overflow-hidden rounded-lg bg-brand-white p-6 shadow transition hover:shadow-lg"
+          >
+            <div className="flex items-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-brand-accent/10">
+                <BuildingStorefrontIcon className="h-6 w-6 text-brand-accent" />
               </div>
-              <h3 className="mt-6 text-lg font-medium text-gray-900">Experiencia Suave</h3>
-              <p className="mt-2 text-base text-gray-500">
-                Plataforma moderna que hace que la búsqueda y transacciones sean fáciles
-              </p>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-brand-gray-900">
+                  Comercial
+                </h3>
+                <p className="mt-1 text-sm text-brand-gray-500">
+                  Locales y oficinas
+                </p>
+              </div>
             </div>
-          </div>
+          </Link>
         </div>
       </div>
     </div>
